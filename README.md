@@ -4,7 +4,7 @@ A web-based carbon accounting tool that helps property owners calculate their Sc
 
 > Built as part of a portfolio project exploring automated carbon accounting for the real estate sector — the industry responsible for 27% of global CO₂ emissions.
 
-🔗 **[Live Demo →](https://your-codesandbox-link-here)**
+🔗 **[Live Demo →](https://jacob-hub-esg.github.io/esgbenchmark/)**
 
 ---
 
@@ -62,7 +62,7 @@ Denmark · Sweden · Norway · Finland · Germany · Netherlands · France · It
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/building-emissions-tool
+git clone https://jacob-hub-esg.github.io/esgbenchmark/
 
 # Install dependencies
 npm install
@@ -71,7 +71,6 @@ npm install
 npm start
 ```
 
-Or open directly in CodeSandbox: **[your-codesandbox-link-here]**
 
 ---
 
@@ -82,7 +81,7 @@ Or open directly in CodeSandbox: **[your-codesandbox-link-here]**
 Sustainability specialist with hands-on experience in ESG reporting, carbon accounting, and decarbonisation strategy across European corporate environments. Proficient in GHG Protocol (Scope 1, 2 & 3), GRI, SASB, TCFD, ESRS, and CSRD frameworks.
 
 📧 joathamjacob@gmail.com
-🔗 [linkedin.com/in/joatham-jacob](https://linkedin.com/in/joatham-jacob)
+🔗 [linkedin.com/in/joatham-jacob](linkedin.com/in/joatham-jacob)
 
 ---
 
