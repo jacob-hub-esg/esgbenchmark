@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Scope 1-2 emissions calculator and intensity benchmark for buildings (GHG Protocol, location-based).">
+<title>BuildingCarbon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+
+:root{
+  --bg:#F2F4F3;
+  --surface:#FFFFFF;
+  --surface-2:#F7F9F8;
+  --ink:#16201D;
+  --muted:#5B6863;
+  --faint:#8A9691;
+  --line:#D9DFDC;
+  --accent:#1F4E79;
+  --accent-soft:#E2EBF3;
+  --band-a:#23865A;
+  --band-b:#86B73C;
+  --band-c:#E9A22F;
+  --band-d:#D24A2C;
+  --band-ink:#FFFFFF;
+  --s1:#1F4E79;
+  --s2:#6FA0C9;
+  --s3:#B8CFE2;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1412;
+    --surface:#161F1C;
+    --surface-2:#1B2521;
+    --ink:#E4EBE8;
+    --muted:#98A7A1;
+    --faint:#6E7D77;
+    --line:#2A3531;
+    --accent:#86B6E2;
+    --accent-soft:#1C2A36;
+    --s1:#86B6E2;
+    --s2:#4E7FA8;
+    --s3:#2F4E68;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1412;
+  --surface:#161F1C;
+  --surface-2:#1B2521;
+  --ink:#E4EBE8;
+  --muted:#98A7A1;
+  --faint:#6E7D77;
+  --line:#2A3531;
+  --accent:#86B6E2;
+  --accent-soft:#1C2A36;
+  --s1:#86B6E2;
+  --s2:#4E7FA8;
+  --s3:#2F4E68;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;padding-inline:20px;padding-block:0 56px}
+.wrap{max-width:1180px;margin:0 auto}
+
+/* Header */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:28px 22px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.wordmark{font-family:var(--display);font-stretch:112%;font-weight:800;font-size:clamp(26px,4vw,34px);letter-spacing:-.02em;margin:0;line-height:1}
+.wordmark span{color:var(--accent)}
+.tagline{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.02em}
+.method{font-size:13px;color:var(--muted);max-width:44ch;margin:0}
+
+/* Layout */
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* Input panel */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;display:flex;flex-direction:column;gap:22px}
+@media (min-width:901px){.panel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}}
+.group{display:flex;flex-direction:column;gap:14px}
+.group-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.eyebrow{font-family:var(--display);font-stretch:100%;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:13px;font-weight:500}
+.field .hint{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.ctl{position:relative}
+input[type=number],select{width:100%;font:inherit;font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:9px 11px;appearance:none;-webkit-appearance:none}
+input[type=number]{padding-right:52px}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 55%,calc(100% - 11px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+.unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:var(--faint);pointer-events:none}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.divider{height:1px;background:var(--line);margin:0}
+
+.checks{display:flex;flex-direction:column;gap:6px}
+.check{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:var(--surface-2);font-size:13px}
+.check input{accent-color:var(--accent);width:16px;height:16px;margin:0;flex-shrink:0}
+.check .pts{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
+.check:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-size:13px;font-weight:500;padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.sample-note{font-size:12px;color:var(--muted);margin:0}
+
+/* Results */
+.results{display:flex;flex-direction:column;gap:28px;min-width:0}
+.headline{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+@media (max-width:640px){.headline{grid-template-columns:1fr 1fr}.headline .hero-stat{grid-column:1/-1;border-right:0;border-bottom:1px solid var(--line)}}
+.stat{padding:20px 22px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px;min-width:0}
+.stat:last-child{border-right:0}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--display);font-stretch:88%;font-weight:700;font-size:clamp(30px,4.2vw,40px);line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hero-stat .v{font-size:clamp(44px,6vw,60px)}
+.stat .u{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.chip{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px 3px 4px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line)}
+.chip b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:99px;color:var(--band-ink);font-family:var(--display);font-size:12px}
+
+.block{display:flex;flex-direction:column;gap:14px}
+.block-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.block-h h2{font-family:var(--display);font-stretch:100%;font-weight:700;font-size:20px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.block-h .aside{font-size:12px;color:var(--muted)}
+
+/* EPC-style ladder */
+.ladder{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.rung{display:grid;grid-template-columns:minmax(0,1fr) 108px;align-items:center;gap:12px}
+.bar{height:36px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 26px 0 12px;color:var(--band-ink);clip-path:polygon(0 0,calc(100% - 16px) 0,100% 50%,calc(100% - 16px) 100%,0 100%);font-size:13px;min-width:0}
+.bar .letter{font-family:var(--display);font-weight:800;font-size:18px;line-height:1}
+.bar .range{font-family:var(--mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rung.dim .bar{opacity:.38}
+.marker{justify-self:stretch;height:36px;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:13px;font-weight:500;clip-path:polygon(14px 0,100% 0,100% 100%,14px 100%,0 50%);padding-left:12px;font-variant-numeric:tabular-nums}
+.marker[hidden]{display:none!important}
+.ladder-foot{font-size:12px;color:var(--muted);margin:6px 0 0}
+
+/* Scope split */
+.split{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.stack{display:flex;height:14px;border-radius:3px;overflow:hidden;background:var(--surface-2)}
+.stack span{display:block;height:100%;transition:width .4s ease}
+.legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:560px){.legend{grid-template-columns:1fr}}
+.leg{display:flex;flex-direction:column;gap:2px;min-width:0}
+.leg .sw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.leg .sw i{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.leg .n{font-family:var(--mono);font-size:17px;font-weight:500;font-variant-numeric:tabular-nums}
+.leg .p{font-family:var(--mono);font-size:12px;color:var(--faint)}
+
+/* Pathway */
+.chart-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.chart-wrap{overflow-x:auto}
+.chart-wrap svg{display:block;width:100%;min-width:480px;height:auto}
+.keys{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.keys span{display:inline-flex;align-items:center;gap:8px}
+.keys i{display:inline-block;width:18px;height:0;border-top:2px solid var(--accent)}
+.keys i.dash{border-top:2px dashed var(--faint)}
+.miles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.mile{border-top:2px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:2px}
+.mile .y{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.mile .r{font-family:var(--display);font-stretch:88%;font-weight:700;font-size:22px;font-variant-numeric:tabular-nums}
+.mile .i{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.caveat{font-size:12px;color:var(--muted);margin:0}
+
+/* Readiness */
+.ready{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+@media (max-width:480px){.ready{grid-template-columns:1fr}}
+.gauge{display:flex;flex-direction:column;gap:6px;min-width:150px}
+.gauge .score{font-family:var(--display);font-stretch:88%;font-weight:700;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.gauge .score small{font-family:var(--mono);font-size:13px;font-weight:400;color:var(--muted)}
+.meter{height:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.meter span{display:block;height:100%;border-radius:99px;transition:width .4s ease}
+.ready p{margin:0;font-size:14px}
+.ready .missing{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* Notes */
+.notes{border-top:1px solid var(--line);padding-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 24px;font-size:12px;color:var(--muted)}
+.notes h3{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);margin:0 0 4px}
+.notes p{margin:0}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1 class="wordmark">Building<span>Carbon</span></h1>
+      <span class="tagline">Scope 1–2 · GHG Protocol · location-based</span>
+    </div>
+    <p class="method">Enter one year of metered energy for a building. Emissions, intensity and the benchmark update as you type.</p>
+  </header>
+
+  <div class="grid">
+    <!-- INPUTS -->
+    <form class="panel" id="form" autocomplete="off">
+      <div class="group">
+        <div class="group-h"><p class="eyebrow">Building</p></div>
+        <div class="row2">
+          <div class="field">
+            <label for="country">Country</label>
+            <select id="country"></select>
+          </div>
+          <div class="field">
+            <label for="btype">Building type</label>
+            <select id="btype"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="area">Floor area</label>
+          <div class="ctl"><input type="number" id="area" min="0" step="any" inputmode="decimal"><span class="unit">m²</span></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="group">
+        <div class="group-h"><p class="eyebrow">Annual energy</p></div>
+        <div class="field">
+          <label for="gas">Natural gas <span class="hint">· Scope 1</span></label>
+          <div class="ctl"><input type="number" id="gas" min="0" step="any" inputmode="decimal"><span class="unit">kWh</span></div>
+          <span class="hint">× 0.202 kg CO₂/kWh</span>
+        </div>
+        <div class="field">
+          <label for="elec">Grid electricity <span class="hint">· Scope 2</span></label>
+          <div class="ctl"><input type="number" id="elec" min="0" step="any" inputmode="decimal"><span class="unit">kWh</span></div>
+          <span class="hint" id="elecHint">× 0.233 kg CO₂/kWh</span>
+        </div>
+        <div class="field">
+          <label for="dist">District heating <span class="hint">· Scope 2</span></label>
+          <div class="ctl"><input type="number" id="dist" min="0" step="any" inputmode="decimal"><span class="unit">kWh</span></div>
+          <span class="hint">× 0.170 kg CO₂/kWh</span>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="group">
+        <div class="group-h"><p class="eyebrow">Reporting practices</p></div>
+        <div class="checks" id="checks"></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" id="sampleBtn">Load example</button>
+        <button type="button" class="btn" id="clearBtn">Clear</button>
+      </div>
+      <p class="sample-note" id="sampleNote">Showing an example: a 2,500 m² office in Italy.</p>
+    </form>
+
+    <!-- RESULTS -->
+    <section class="results" aria-live="polite">
+      <div class="headline">
+        <div class="stat hero-stat">
+          <span class="k">Emission intensity</span>
+          <span class="v" id="intensity">—</span>
+          <span class="u">kg CO₂e / m² / yr</span>
+          <span class="chip" id="ratingChip"><b id="ratingLetter">–</b><span id="ratingLabel">No data</span></span>
+        </div>
+        <div class="stat">
+          <span class="k">Total emissions</span>
+          <span class="v" id="total">—</span>
+          <span class="u" id="totalUnit">t CO₂e / yr</span>
+        </div>
+        <div class="stat">
+          <span class="k">Scope 1 share</span>
+          <span class="v" id="s1share">—</span>
+          <span class="u">on-site combustion</span>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-h">
+          <h2 id="ladderTitle">Benchmark · Office</h2>
+          <span class="aside">kg CO₂e / m² / yr</span>
+        </div>
+        <div class="ladder" id="ladder"></div>
+      </div>
+
+      <div class="block">
+        <div class="block-h">
+          <h2>Where the emissions come from</h2>
+        </div>
+        <div class="split">
+          <div class="stack" id="stack" role="img" aria-label="Emissions split by source"></div>
+          <div class="legend" id="legend"></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-h">
+          <h2>Pathway to 2050</h2>
+          <span class="aside">Intensity, kg CO₂e / m²</span>
+        </div>
+        <div class="chart-card">
+          <div class="chart-wrap" id="chart"></div>
+          <div class="keys">
+            <span><i></i>Front-loaded reduction curve</span>
+            <span><i class="dash"></i>Straight-line reduction</span>
+          </div>
+          <div class="miles" id="miles"></div>
+          <p class="caveat">An illustrative trajectory from today's intensity to zero. It is not tied to specific measures or to an SBTi pathway.</p>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-h">
+          <h2>Reporting readiness</h2>
+          <span class="aside">Self-assessed, six practices</span>
+        </div>
+        <div class="ready">
+          <div class="gauge">
+            <span class="score"><span id="score">0</span> <small>/ 100</small></span>
+            <div class="meter"><span id="meter"></span></div>
+          </div>
+          <div>
+            <p id="readyMsg"></p>
+            <p class="missing" id="missing"></p>
+          </div>
+        </div>
+      </div>
+
+      <footer class="notes">
+        <div>
+          <h3>Method</h3>
+          <p>Scope 1 = gas × 0.202. Scope 2 = electricity × national grid average + district heat × 0.170. All factors in kg CO₂e per kWh, location-based.</p>
+        </div>
+        <div>
+          <h3>Benchmarks</h3>
+          <p>The bands are indicative reference values by building type. They are not EPC classes or regulatory thresholds.</p>
+        </div>
+        <div>
+          <h3>Grid factors</h3>
+          <p>National average factors for 20 European grids. Check them against the current national inventory before using results in a report.</p>
+        </div>
+      </footer>
+    </section>
+  </div>
+</div>
+
+<script>
+const EF={Austria:0.104,Belgium:0.167,"Czech Republic":0.421,Denmark:0.154,Estonia:0.471,Finland:0.098,France:0.052,Germany:0.385,Greece:0.328,Italy:0.233,Latvia:0.119,Lithuania:0.216,Netherlands:0.283,Norway:0.026,Poland:0.635,Portugal:0.196,Spain:0.181,Sweden:0.045,Switzerland:0.030,"United Kingdom":0.225};
+const BENCH={Office:{good:28,avg:45,poor:70},Residential:{good:20,avg:35,poor:55},Retail:{good:35,avg:55,poor:85},Industrial:{good:50,avg:80,poor:120},Hotel:{good:40,avg:65,poor:100},Healthcare:{good:60,avg:90,poor:130}};
+const CHECKS=[
+  {id:"scope1",label:"Scope 1 emissions tracked",w:20},
+  {id:"scope2",label:"Scope 2 emissions tracked",w:20},
+  {id:"scope3",label:"Scope 3 partially covered",w:15},
+  {id:"energyAudit",label:"Energy audit conducted",w:15},
+  {id:"sbti",label:"SBTi target set",w:15},
+  {id:"thirdParty",label:"Data verified by a third party",w:15}
+];
+const GAS_EF=0.202, DIST_EF=0.17;
+const START=new Date().getFullYear(), END=2050;
+const SAMPLE={country:"Italy",btype:"Office",area:"2500",gas:"140000",elec:"210000",dist:"",checks:["scope1","scope2","energyAudit"]};
+
+const $=id=>document.getElementById(id);
+const fmt0=n=>Math.round(n).toLocaleString("en-GB");
+const fmt1=n=>n.toLocaleString("en-GB",{minimumFractionDigits:1,maximumFractionDigits:1});
+
+$("country").innerHTML=Object.keys(EF).map(c=>`<option>${c}</option>`).join("");
+$("btype").innerHTML=Object.keys(BENCH).map(t=>`<option>${t}</option>`).join("");
+$("checks").innerHTML=CHECKS.map(c=>`<label class="check" for="ck_${c.id}"><input type="checkbox" id="ck_${c.id}" data-id="${c.id}"><span>${c.label}</span><span class="pts">+${c.w}</span></label>`).join("");
+
+function load(s){
+  $("country").value=s.country;$("btype").value=s.btype;
+  $("area").value=s.area;$("gas").value=s.gas;$("elec").value=s.elec;$("dist").value=s.dist;
+  CHECKS.forEach(c=>{$("ck_"+c.id).checked=s.checks.includes(c.id)});
+}
+
+function bandFor(v,b){
+  if(v<=b.good)return{i:0,letter:"A",label:"Best-in-class",color:"var(--band-a)"};
+  if(v<=b.avg)return{i:1,letter:"B",label:"Better than average",color:"var(--band-b)"};
+  if(v<=b.poor)return{i:2,letter:"C",label:"Below average",color:"var(--band-c)"};
+  return{i:3,letter:"D",label:"Poor performer",color:"var(--band-d)"};
+}
+
+function num(id){const v=parseFloat($(id).value);return isFinite(v)&&v>0?v:0}
+
+function compute(){
+  const country=$("country").value, btype=$("btype").value;
+  const area=num("area"), gas=num("gas"), elec=num("elec"), dist=num("dist");
+  const ef=EF[country];
+  const s1=gas*GAS_EF, s2e=elec*ef, s2d=dist*DIST_EF;
+  const total=s1+s2e+s2d;
+  const intensity=area>0?total/area:0;
+  const score=CHECKS.reduce((a,c)=>a+($("ck_"+c.id).checked?c.w:0),0);
+  return{country,btype,area,ef,s1,s2e,s2d,total,intensity,score,b:BENCH[btype],valid:area>0&&total>0};
+}
+
+function renderLadder(r){
+  const b=r.b;
+  const rows=[
+    {letter:"A",range:`≤ ${b.good}`,label:"Best-in-class",w:58,color:"var(--band-a)"},
+    {letter:"B",range:`${b.good}–${b.avg}`,label:"Average",w:72,color:"var(--band-b)"},
+    {letter:"C",range:`${b.avg}–${b.poor}`,label:"Below average",w:86,color:"var(--band-c)"},
+    {letter:"D",range:`> ${b.poor}`,label:"Poor",w:100,color:"var(--band-d)"}
+  ];
+  const band=r.valid?bandFor(r.intensity,b):null;
+  $("ladder").innerHTML=rows.map((row,i)=>{
+    const on=band&&band.i===i;
+    return`<div class="rung ${band&&!on?"dim":""}">
+      <div style="width:${row.w}%;min-width:0"><div class="bar" style="background:${row.color}"><span class="letter">${row.letter}</span><span class="range">${row.range}</span></div></div>
+      <div class="marker" ${on?"":"hidden"}>${on?fmt1(r.intensity):""}</div>
+    </div>`;
+  }).join("")+`<p class="ladder-foot">${band?`At ${fmt1(r.intensity)} kg/m², this ${r.btype.toLowerCase()} building sits in band ${band.letter}. The band ${band.i===0?"is the best of four":band.i===3?"is the worst of four":"boundaries are "+b.good+", "+b.avg+" and "+b.poor+" kg/m²"}.`:"Enter floor area and at least one energy value to place the building."}</p>`;
+}
+
+function renderSplit(r){
+  const parts=[
+    {k:"Natural gas",s:"Scope 1",v:r.s1,c:"var(--s1)"},
+    {k:"Grid electricity",s:"Scope 2",v:r.s2e,c:"var(--s2)"},
+    {k:"District heating",s:"Scope 2",v:r.s2d,c:"var(--s3)"}
+  ];
+  const t=r.total||1;
+  $("stack").innerHTML=parts.map(p=>`<span style="width:${r.total?p.v/t*100:0}%;background:${p.c}" title="${p.k}"></span>`).join("");
+  $("legend").innerHTML=parts.map(p=>`<div class="leg">
+      <span class="sw"><i style="background:${p.c}"></i>${p.k} · ${p.s}</span>
+      <span class="n">${r.total?fmt0(p.v):"—"} <span class="p">kg</span></span>
+      <span class="p">${r.total?Math.round(p.v/t*100)+"% of total":"&nbsp;"}</span>
+    </div>`).join("");
+}
+
+function path(intensity){
+  const pts=[];
+  for(let y=START;y<=END;y++){
+    const p=(y-START)/(END-START);
+    pts.push({y,curve:intensity*(1-(1-Math.pow(1-p,2))),line:intensity*(1-p)});
+  }
+  return pts;
+}
+
+function niceMax(v){
+  if(v<=0)return 10;
+  const mag=Math.pow(10,Math.floor(Math.log10(v)));
+  for(const m of[1,1.5,2,2.5,3,4,5,6,8,10]){if(m*mag>=v)return m*mag}
+  return 10*mag;
+}
+
+function renderChart(r){
+  const W=640,H=240,L=46,R=16,T=14,B=30;
+  const cw=W-L-R, ch=H-T-B;
+  const I=r.valid?r.intensity:0;
+  const max=niceMax(I);
+  const pts=path(I);
+  const x=y=>L+(y-START)/(END-START)*cw;
+  const yv=v=>T+ch-(v/max)*ch;
+  const ticksY=[0,max/2,max];
+  const ticksX=[START];for(let y=2030;y<=END;y+=5)if(y-START>=3)ticksX.push(y);
+  const curve=pts.map((p,i)=>`${i?"L":"M"}${x(p.y).toFixed(1)},${yv(p.curve).toFixed(1)}`).join(" ");
+  const area=curve+` L${x(END)},${yv(0)} L${x(START)},${yv(0)} Z`;
+  const line=`M${x(START)},${yv(I)} L${x(END)},${yv(0)}`;
+  const milesY=[2030,2040,2050];
+  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Intensity pathway from ${START} to 2050">
+    ${ticksY.map(v=>`<line x1="${L}" x2="${W-R}" y1="${yv(v)}" y2="${yv(v)}" stroke="var(--line)" stroke-width="1" ${v?'stroke-dasharray="2 4"':""}/>
+      <text x="${L-8}" y="${yv(v)+4}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--faint)">${Number.isInteger(v)?v:v.toFixed(1)}</text>`).join("")}
+    ${ticksX.map(y=>`<text x="${x(y)}" y="${H-8}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--faint)">${y}</text>`).join("")}
+    ${r.valid?`
+    <path d="${area}" fill="var(--accent)" fill-opacity="0.10"/>
+    <path d="${line}" fill="none" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="5 5"/>
+    <path d="${curve}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+    ${milesY.map(y=>{const p=pts.find(q=>q.y===y);return p?`<circle cx="${x(y)}" cy="${yv(p.curve)}" r="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>`:""}).join("")}
+    <circle cx="${x(START)}" cy="${yv(I)}" r="4.5" fill="var(--accent)"/>
+    <text x="${x(START)+10}" y="${yv(I)-8}" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)">${fmt1(I)} today</text>`
+    :`<text x="${L+cw/2}" y="${T+ch/2}" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="var(--muted)">No building data yet</text>`}
+  </svg>`;
+  $("miles").innerHTML=milesY.map(y=>{
+    const p=pts.find(q=>q.y===y);
+    const red=r.valid&&p?Math.round((1-p.curve/I)*100):null;
+    return`<div class="mile"><span class="y">${y}</span><span class="r">${red===null?"—":"−"+red+"%"}</span><span class="i">${r.valid&&p?fmt1(p.curve)+" kg/m²":"&nbsp;"}</span></div>`;
+  }).join("");
+}
+
+function renderReady(r){
+  const s=r.score;
+  const col=s>=70?"var(--band-a)":s>=40?"var(--band-c)":"var(--band-d)";
+  $("score").textContent=s;
+  $("meter").style.width=s+"%";$("meter").style.background=col;
+  $("readyMsg").textContent=s>=70?"Core measurement, targets and assurance are largely in place.":s>=40?"Measurement is started, but targets, value-chain coverage or assurance are missing.":"Start with Scope 1 and 2 measurement and an energy audit.";
+  const miss=CHECKS.filter(c=>!$("ck_"+c.id).checked).map(c=>c.label.toLowerCase());
+  $("missing").textContent=miss.length?"Missing: "+miss.join(", ")+".":"All six practices ticked.";
+}
+
+function render(){
+  const r=compute();
+  $("elecHint").textContent=`× ${r.ef.toFixed(3)} kg CO₂/kWh (${r.country})`;
+  $("ladderTitle").textContent=`Benchmark · ${r.btype}`;
+  if(r.valid){
+    $("intensity").textContent=fmt1(r.intensity);
+    const big=r.total>=10000;
+    $("total").textContent=big?fmt1(r.total/1000):fmt0(r.total);
+    $("totalUnit").textContent=big?"t CO₂e / yr":"kg CO₂e / yr";
+    $("s1share").textContent=Math.round(r.s1/r.total*100)+"%";
+    const band=bandFor(r.intensity,r.b);
+    $("ratingLetter").textContent=band.letter;
+    $("ratingLetter").style.background=band.color;
+    $("ratingLabel").textContent=band.label;
+  }else{
+    $("intensity").textContent="—";$("total").textContent="—";$("s1share").textContent="—";
+    $("ratingLetter").textContent="–";$("ratingLetter").style.background="var(--faint)";
+    $("ratingLabel").textContent="Enter area and energy";
+  }
+  renderLadder(r);renderSplit(r);renderChart(r);renderReady(r);
+}
+
+$("form").addEventListener("input",()=>{$("sampleNote").hidden=true;render()});
+$("form").addEventListener("change",render);
+$("form").addEventListener("submit",e=>e.preventDefault());
+$("sampleBtn").addEventListener("click",()=>{load(SAMPLE);$("sampleNote").hidden=false;render()});
+$("clearBtn").addEventListener("click",()=>{load({country:"Italy",btype:"Office",area:"",gas:"",elec:"",dist:"",checks:[]});$("sampleNote").hidden=true;render()});
+
+load(SAMPLE);
+render();
+</script>
+
+</body>
+</html>
